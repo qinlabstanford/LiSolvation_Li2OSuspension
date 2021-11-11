@@ -1,0 +1,33 @@
+; we'll use the sd integrator with 10000000 time steps (20 ns)
+integrator               = md
+nsteps                   = 10000000
+dt			 = 0.002
+nstlist                  = 10
+nstenergy                = 1000
+nstxout-compressed       = 1000
+nstlog                   = 1000
+; cut-offs at 1.0nm
+rlist                    = 1.0
+dispcorr                 = EnerPres
+vdw-type                 = pme
+rvdw                     = 1.2
+; Coulomb interactions 
+cutoff-scheme            = Verlet
+coulombtype              = pme
+rcoulomb                 = 1.2
+fourierspacing           = 0.12
+; Constraints
+constraints              = h-bonds
+; set temperature to 300K
+tcoupl                   = nose-hoover
+tc-grps                  = system
+tau-t                    = 2 
+ref-t                    = 300 
+; set pressure to 1 bar with a thermostat that gives a correct 
+; thermodynamic ensemble
+pcoupl			 = parrinello-rahman
+ref-p			 = 1
+compressibility		 = 4.5e-5
+tau-p			 = 20
+
+epsilon_r=1
