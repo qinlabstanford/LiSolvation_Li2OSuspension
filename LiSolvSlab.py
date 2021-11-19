@@ -1,10 +1,9 @@
 #!/usr/bin/python
 #--------------------------------------------------------------------------------------------
-# code used to analyze solvation environment of lithium ion in different electrolytes
-# for the paper "A single-salt-single-solvent low-concentration electrolyte with special \
-# Li-F solvation enabling practical lithium-metal batteries"
-# the default trajectory and MD setting are rdf.xtc and rdf.tpr, respectively
-# For questions, reach Xian Kong at xianshine@gmail.com
+# code used to analyze solvation environment of lithium ions near the surface of a fixed lithium oxide slab 
+# for the paper "Suspension electrolyte with modified Li+ solvation environment for lithium metal batteries"
+# the default trajectory and MD setting are run.xtc and run.tpr, respectively
+# For questions, reach Paul Rudnicki at prudnick@stanford.edu
 #--------------------------------------------------------------------------------------------
 
 
@@ -44,22 +43,6 @@ if sol=='ED':
    sols=[ani,'EC','DEC']
 if sol=='EDF':
    sols=[ani,'EC','DEC','FEC']
-if sol=='DB':
-   sols=[ani,'DMC','BTF']
-if sol=='FD':
-   sols=[ani,'FEC','DEC']
-if sol=='FFD':
-   sols=[ani,'FEC','FEM','D2E']
-if sol=='DEE':
-   sols=[ani,'DEE']
-if sol=='Tri':
-   sols=[ani,'TriFDEE']
-if sol=='Tetra':
-   sols=[ani,'TetraFDEE']
-if sol=='HF':
-   sols=[ani,'HFDEE']
-if sol=='PF':
-   sols=[ani,'PFDEE']
 
 atmani="O"
 if ani=='PF6':
@@ -127,21 +110,14 @@ for isol in range(1,nsols):
 
 print(rcuts)
 
-u = mda.Universe("runSlabResLowEps.tpr", "resCent.xtc", in_memory=False)
-#li = u.select_atoms("resname LI and (prop z < 70)",updating=True)
-#for ts in u.trajectory[int(beg/dt):]:
-#   if (u.trajectory.time > beg) and (u.trajectory.time %dta==0 ):
-##      print("Frame: {0:5d}, Time: {1:8.3f} ps, nsol: {2:5d} ".format(ts.frame, u.trajectory.time, 0))
-#      print(li.residues.resids)
+u = mda.Universe("run.tpr", "run.xtc", in_memory=False)
+
+# Selecting ions in the bulk region (at least 2 nm from the surface).
+# Will depend on specific coordinates of simulation
 li = u.select_atoms("resname LI and (prop z > 110 and prop z < 220)",updating=True)
-#print(u.atoms)
-#lit=li[0]
-#print(lit.resid)
 
 nFrame = len(u.trajectory)
 
-#print(nFrame)
-#print (resIDSol)
 print(li.atoms)
 
 matRes=np.zeros((nFrame,1))
@@ -149,14 +125,12 @@ matRes=np.zeros((nFrame,1))
 for ts in u.trajectory[int(beg/dt):]:
    if (u.trajectory.time > beg) and (u.trajectory.time %dta==0 ):
 #      print("Frame: {0:5d}, Time: {1:8.3f} ps, nsol: {2:5d} ".format(ts.frame, u.trajectory.time, 0))
-      #print(li.residues.resids)
       for a in li.atoms:
          agLi1=mda.core.groups.AtomGroup([a])
          nSolRes=np.zeros((nsols,), dtype=int)
          nSolRes2=np.zeros((nsols,), dtype=int)
          for isol in range(0,nsols):
             si=sols[isol]
-            #solAtms = u.select_atoms("resname {0:5s} and name OC OE N3 NBT B Cl1 P  I and around {1:8.3f} group li1".format(si,rcuts[isol]),li1=agLi1)
             solAtms = u.select_atoms("resname {0:5s} and (not name C* B* H* S* F*) and around {1:8.3f} group li1 ".format(si,rcuts[isol]),li1=agLi1)
             solRes = solAtms.residues
             resIDSol = solRes.resids
@@ -168,11 +142,14 @@ for ts in u.trajectory[int(beg/dt):]:
             counts[nSolRes[0],nSolRes[1],nSolRes[2]] += 1.0
          elif nsols==2:
             counts[nSolRes[0],nSolRes[1]] += 1.0
+
+# Selecting ions in the interfacial region (defined as within 5 angstroms of the surface).
+# Will depend on specific coordinates of simulation
+
 li = u.select_atoms("resname LI and (prop z < 78 or prop z > 241.9832 or (prop z < 96 and prop z > 91))",updating=True)
 for ts in u.trajectory[int(beg/dt):]:
    if (u.trajectory.time > beg) and (u.trajectory.time %dta==0 ):
 #      print("Frame: {0:5d}, Time: {1:8.3f} ps, nsol: {2:5d} ".format(ts.frame, u.trajectory.time, 0))
-      #print(li.residues.resids)
       for a in li.atoms:
          agLi1=mda.core.groups.AtomGroup([a])
          nSolRes2=np.zeros((nsols,), dtype=int)
@@ -190,14 +167,12 @@ for ts in u.trajectory[int(beg/dt):]:
          elif nsols==2:
             counts2[nSolRes2[0],nSolRes2[1]] += 1.0
 
-#print(counts)
 sumCounts=np.sum(counts)
 sumCounts2=np.sum(counts2)
-#print(sumCounts)
 freqs=counts/sumCounts*100
 freqs2=counts2/sumCounts2*100
 
-fo=open('coordNumFreqBulkNew.log',"w")
+fo=open('coordNumFreqBulk.log',"w")
 
 if nsols==4:
  for i1 in range(maxAni):
@@ -222,7 +197,7 @@ elif nsols==2:
       fo.write("{:5d} {:5d} {:8.3f} \n".format(i1,i2,freqs[i1,i2]))
 fo.close()
 
-fo=open('coordNumFreqNearNew.log',"w")
+fo=open('coordNumFreqNear.log',"w")
 
 if nsols==4:
  for i1 in range(maxAni):
@@ -246,5 +221,3 @@ elif nsols==2:
       print("{:5d} {:5d} {:8.3f}".format(i1,i2,freqs2[i1,i2]) )
       fo.write("{:5d} {:5d} {:8.3f} \n".format(i1,i2,freqs2[i1,i2]))
 fo.close()
-#print(counts)
-#np.savetxt('rcf.'+sol+'.dat',rcf,fmt='%6.3f %10.6f')

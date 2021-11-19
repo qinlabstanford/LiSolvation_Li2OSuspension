@@ -1,0 +1,14 @@
+[ moleculetype ]
+LiO       3
+
+[ atoms ]
+; Charges and LJ parameters taken from Laura Benitez and Jorge M. Seminario 2017 J. Electrochem. Soc. 164 E3159
+;   nr       type  resnr residue  atom   cgnr     charge       mass  
+     1  opls_968      1    LiO      Li      1     0.75   6.94100
+
+; opls_968   Li     3     6.94100     0.750       A    2.18300e-01  1.04600e-01 ; Added by Paul Feb. 12 2021  Seminario 2017 J. Electrochem. Soc. 164 E3159
+#ifdef POSRES_LiO
+[ position_restraints ]
+; atom  type      fx      fy      fz
+     1     1   1000     1000     1000
+#endif

@@ -1,0 +1,15 @@
+[ moleculetype ]
+OLi       3
+
+[ atoms ]
+; Charges and LJ parameters taken from Laura Benitez and Jorge M. Seminario 2017 J. Electrochem. Soc. 164 E3159
+;   nr       type  resnr residue  atom   cgnr     charge       mass  
+     1  opls_967      1    OLi       O      1     -1.5   15.99940
+
+; opls_967    O     8	15.99940    -1.500       A    3.11800e-01  2.51040e-01 ; Added by Paul Feb. 12 2021 Seminario 2017 J. Electrochem. Soc. 164 E3159
+
+#ifdef POSRES_LiO
+[ position_restraints ]
+; atom  type      fx      fy      fz
+     1     1   1000     1000     1000
+#endif

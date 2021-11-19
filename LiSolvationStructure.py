@@ -1,10 +1,9 @@
 #!/usr/bin/python
 #--------------------------------------------------------------------------------------------
-# code used to analyze solvation environment of lithium ion in different electrolytes
-# for the paper "A single-salt-single-solvent low-concentration electrolyte with special \
-# Li-F solvation enabling practical lithium-metal batteries"
-# the default trajectory and MD setting are rdf.xtc and rdf.tpr, respectively
-# For questions, reach Xian Kong at xianshine@gmail.com
+# code used to analyze solvation environment of lithium ions in different electrolytes
+# for the paper "Suspension electrolyte with modified Li+ solvation environment for lithium metal batteries"
+# the default trajectory and MD setting are run.xtc and run.tpr, respectively
+# For questions, reach Paul Rudnicki at prudnick@stanford.edu
 #--------------------------------------------------------------------------------------------
 
 
@@ -44,22 +43,6 @@ if sol=='ED':
    sols=[ani,'EC','DEC']
 if sol=='EDF':
    sols=[ani,'EC','DEC','FEC']
-if sol=='DB':
-   sols=[ani,'DMC','BTF']
-if sol=='FD':
-   sols=[ani,'FEC','DEC']
-if sol=='FFD':
-   sols=[ani,'FEC','FEM','D2E']
-if sol=='DEE':
-   sols=[ani,'DEE']
-if sol=='Tri':
-   sols=[ani,'TriFDEE']
-if sol=='Tetra':
-   sols=[ani,'TetraFDEE']
-if sol=='HF':
-   sols=[ani,'HFDEE']
-if sol=='PF':
-   sols=[ani,'PFDEE']
 
 atmani="O"
 if ani=='PF6':
@@ -79,13 +62,10 @@ maxAni=100
 
 if nsols==4:
    counts=np.zeros([maxAni,maxSol,maxSol,maxSol])
-   counts2=np.zeros([maxAni,maxSol,maxSol,maxSol])
 elif nsols==3:
    counts=np.zeros([maxAni,maxSol,maxSol])
-   counts2=np.zeros([maxAni,maxSol,maxSol])
 elif nsols==2:
    counts=np.zeros([maxAni,maxSol])
-   counts2=np.zeros([maxAni,maxSol])
 else:
    print("unknown number of solvents, exiting...")
    exit()
@@ -127,11 +107,8 @@ for isol in range(1,nsols):
 
 print(rcuts)
 
-u = mda.Universe("runHBLowEps.tpr", "runHBLowEps.xtc", in_memory=False)
+u = mda.Universe("run.tpr", "run.xtc", in_memory=False)
 li = u.select_atoms("resname LI")
-#print(u.atoms)
-#lit=li[0]
-#print(lit.resid)
 
 nFrame = len(u.trajectory)
 
@@ -150,7 +127,6 @@ for ts in u.trajectory[int(beg/dt):]:
          nSolRes2=np.zeros((nsols,), dtype=int)
          for isol in range(0,nsols):
             si=sols[isol]
-            #solAtms = u.select_atoms("resname {0:5s} and name OC OE N3 NBT B Cl1 P  I and around {1:8.3f} group li1".format(si,rcuts[isol]),li1=agLi1)
             solAtms = u.select_atoms("resname {0:5s} and (not name C* B* H* S* F*) and around {1:8.3f} group li1".format(si,rcuts[isol]),li1=agLi1)
             solRes = solAtms.residues
             resIDSol = solRes.resids
@@ -163,32 +139,20 @@ for ts in u.trajectory[int(beg/dt):]:
             #print(solAtms)
             #print(solRes)
             #print(resIDSol)
-            #if (isol==0) and (len(resIDSol)==5):
-            #   ids=' '.join(['{:10d}'.format(i) for i in resIDSol])
-            #   print("Time: {:8.0f} ps; Li resID: {:10d}".format(u.trajectory.time,agLi1[0].resid))
-            #   print(ids)
-            #   exit()
             nSolRes[isol] = len(resIDSol)
             nSolRes2[isol] = len(resIDSol2)
             #print("Frame: {0:5d}, Time: {1:8.3f} ps, nsol: {2:5d} ".format(ts.frame, u.trajectory.time, nSolRes[isol]))
          if nsols==4:
             counts[nSolRes[0],nSolRes[1],nSolRes[2],nSolRes[3]] += 1.0
-            counts2[nSolRes2[0],nSolRes2[1],nSolRes2[2],nSolRes2[3]] += 1.0
          elif nsols==3:
             counts[nSolRes[0],nSolRes[1],nSolRes[2]] += 1.0
-            counts2[nSolRes2[0],nSolRes2[1],nSolRes2[2]] += 1.0
          elif nsols==2:
             counts[nSolRes[0],nSolRes[1]] += 1.0
-            counts2[nSolRes2[0],nSolRes2[1]] += 1.0
 
-#print(counts)
 sumCounts=np.sum(counts)
-sumCounts2=np.sum(counts2)
-#print(sumCounts)
 freqs=counts/sumCounts*100
-freqs2=counts2/sumCounts2*100
 
-fo=open('coordNumFreqP.log',"w")
+fo=open('coordNumFreq.log',"w")
 
 if nsols==4:
  for i1 in range(maxAni):
@@ -212,6 +176,3 @@ elif nsols==2:
       print("{:5d} {:5d} {:8.3f}".format(i1,i2,freqs[i1,i2]) )
       fo.write("{:5d} {:5d} {:8.3f} \n".format(i1,i2,freqs[i1,i2]))
 fo.close()
-
-#print(counts)
-#np.savetxt('rcf.'+sol+'.dat',rcf,fmt='%6.3f %10.6f')
